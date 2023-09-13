@@ -1,13 +1,23 @@
-**About { $exists: args.phone === 'YES' } in allPersons:**
+So far, we have started the application with the easy-to-use function startStandaloneServer, thanks to which the application has not had to be configured that much
 
-`{ $exists: args.phone === 'YES' }` is used as a condition in a MongoDB query when calling `Person.find({ phone: { $exists: args.phone === 'YES' } })`.
+Unfortunately, startStandaloneServer does not allow adding subscriptions to the application, so in this branch we switched to the more robust expressMiddleware function. As the name of the function already suggests, it is an Express middleware, which means that Express must also be configured for the application, with the GraphQL server acting as middleware.
 
-This code is using the `$exists` operator in MongoDB to filter documents in the `Person` collection based on the value of `args.phone`. Let's break it down:
+ApolloServerPluginDrainHttpServer has now been added to the configuration of the GraphQL server according to the recommendations of the documentation
+The GraphQL server in the server variable is now connected to listen to the root of the server, i.e. to the / route, using the expressMiddleware object. Information about the logged-in user is set in the context using the function we defined earlier. Since it is an Express server, the middlewares express-json and cors are also needed so that the data included in the requests is correctly parsed and so that CORS problems do not appear.
 
-- `args.phone` is expected to be of type `YesNo`, which is an enum with two possible values: `YES` or `NO`.
+Since the GraphQL server must be started before the Express application can start listening to the specified port, the entire initialization has had to be placed in an async function, which allows waiting for the GraphQL server to start.
 
-- `args.phone === 'YES'` is a JavaScript comparison that checks if the value of `args.phone` is equal to the string `'YES'`. If it is equal, this comparison evaluates to `true`, otherwise, it evaluates to `false`.
+When queries and mutations are used, GraphQL uses the HTTP protocol in the communication. In case of subscriptions, the communication between client and server happens with WebSockets.
 
-- `{ $exists: args.phone === 'YES' }` creates a MongoDB query object. When `args.phone` is `'YES'`, it sets the query to `{ phone: { $exists: true } }`, which means it will find documents where the `phone` field exists. When `args.phone` is `'NO'` (or any other value), it sets the query to `{ phone: { $exists: false } }`, which means it will find documents where the `phone` field does not exist.
+ The resolver of the personAdded subscription registers and saves info about all the clients that do the subscription. The clients are saved to an "iterator object" called PERSON_ADDED thanks to the following code:
+```JavaScript
+Subscription: {
+  personAdded: {
+    subscribe: () => pubsub.asyncIterator('PERSON_ADDED')
+  },
+},```
+The iterator name is an arbitrary string, but to follow the convention, it is the subscription name written in capital letters.
 
-So, in essence, this condition is used to filter `Person` documents based on whether or not they have a `phone` field based on the value of `args.phone`. If `args.phone` is `'YES'`, it finds documents with a `phone` field, and if `args.phone` is `'NO'`, it finds documents without a `phone` field.
+Adding a new person publishes a notification about the operation to all subscribers with PubSub's method publish:
+```JavaScript
+pubsub.publish('PERSON_ADDED', { personAdded: person })```
