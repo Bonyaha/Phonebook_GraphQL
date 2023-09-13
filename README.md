@@ -10,14 +10,17 @@ Since the GraphQL server must be started before the Express application can star
 When queries and mutations are used, GraphQL uses the HTTP protocol in the communication. In case of subscriptions, the communication between client and server happens with WebSockets.
 
  The resolver of the personAdded subscription registers and saves info about all the clients that do the subscription. The clients are saved to an "iterator object" called PERSON_ADDED thanks to the following code:
+
 ```JavaScript
 Subscription: {
   personAdded: {
     subscribe: () => pubsub.asyncIterator('PERSON_ADDED')
   },
-},
+}```,
+
 
 The iterator name is an arbitrary string, but to follow the convention, it is the subscription name written in capital letters.
 Adding a new person publishes a notification about the operation to all subscribers with PubSub's method publish:
+
 ```JavaScript
-pubsub.publish('PERSON_ADDED', { personAdded: person })
+pubsub.publish('PERSON_ADDED', { personAdded: person })```
