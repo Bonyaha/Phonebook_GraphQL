@@ -15,9 +15,9 @@ Subscription: {
   personAdded: {
     subscribe: () => pubsub.asyncIterator('PERSON_ADDED')
   },
-},```
-The iterator name is an arbitrary string, but to follow the convention, it is the subscription name written in capital letters.
+},
 
+The iterator name is an arbitrary string, but to follow the convention, it is the subscription name written in capital letters.
 Adding a new person publishes a notification about the operation to all subscribers with PubSub's method publish:
 ```JavaScript
-pubsub.publish('PERSON_ADDED', { personAdded: person })```
+pubsub.publish('PERSON_ADDED', { personAdded: person })
