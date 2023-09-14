@@ -26,3 +26,12 @@ Adding a new person publishes a notification about the operation to all subscrib
 ```JavaScript
 pubsub.publish('PERSON_ADDED', { personAdded: person })
 ```
+In this context, the order of execution is as follows:
+
+1. The `subscribe` function defined in the `Subscription` resolver is executed when a client initiates a subscription. This function returns an async iterator (`pubsub.asyncIterator('PERSON_ADDED')`) that represents the stream of data for that subscription. However, it doesn't actually start sending data to clients at this point.
+
+2. When a new person is added using the `addPerson` mutation, the line `pubsub.publish('PERSON_ADDED', { personAdded: person })` is executed. This line of code publishes a message to the `PERSON_ADDED` channel with the data of the newly added person.
+
+3. The clients who have subscribed to the `personAdded` subscription will receive data when a message is published to the `PERSON_ADDED` channel. The WebSocket connection between the server and the subscribed clients is responsible for delivering this data.
+
+So, the `subscribe` function is executed when a client subscribes to the subscription, and it returns an async iterator. The `pubsub.publish` method is executed when a new person is added, and it sends data to all clients who have subscribed to the `personAdded` subscription. The order of execution depends on when clients initiate subscriptions and when mutations are performed. These are separate processes, and the `subscribe` function doesn't send data immediately upon its execution; it sends data when there is something to publish, triggered by mutations or other events.
